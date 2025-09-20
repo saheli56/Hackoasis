@@ -706,15 +706,54 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
         <h3 className="text-lg font-semibold text-slate-900 mb-4">Cost vs Performance Analysis</h3>
         <div className="h-80 flex items-center justify-center bg-slate-50 rounded-lg">
           <div className="text-center">
-            <div className="w-64 h-48 bg-white rounded-lg shadow-sm border border-slate-200 p-4 relative">
-              {/* Simple scatter plot representation */}
-              <div className="absolute top-4 left-8 w-2 h-2 bg-blue-500 rounded-full" title="AWS: High Cost, High Performance"></div>
-              <div className="absolute top-12 right-12 w-2 h-2 bg-green-500 rounded-full" title="GCP: Medium Cost, High Performance"></div>
-              <div className="absolute bottom-8 right-8 w-2 h-2 bg-orange-500 rounded-full" title="Azure: Low Cost, Medium Performance"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-slate-500 text-sm">Interactive scatter plot visualization</p>
-              </div>
-            </div>
+            <svg width="520" height="300" viewBox="0 0 520 300" className="bg-white rounded-lg shadow-sm border border-slate-200">
+              {/* margins */}
+              <g transform="translate(50,20)">
+                {/* grid lines and axes */}
+                <g>
+                  {/* vertical grid */}
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <line key={`v-${i}`} x1={(i * 80)} y1={0} x2={(i * 80)} y2={220} stroke="#eef2f7" />
+                  ))}
+                  {/* horizontal grid */}
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <line key={`h-${i}`} x1={0} y1={(i * 55)} x2={400} y2={(i * 55)} stroke="#eef2f7" />
+                  ))}
+                </g>
+
+                {/* axes labels */}
+                <text x={200} y={250} textAnchor="middle" className="text-slate-500">Monthly Cost (USD)</text>
+                <text x={-30} y={110} transform="rotate(-90 -30 110)" textAnchor="middle" className="text-slate-500">Performance Score</text>
+
+                {/* data points */}
+                {
+                  // define raw provider data
+                  (() => {
+                    const providers = [
+                      { id: 'aws', label: 'AWS', cost: 4520, performance: 9.2, color: '#1d4ed8' },
+                      { id: 'gcp', label: 'GCP', cost: 3890, performance: 9.5, color: '#059669' },
+                      { id: 'azure', label: 'Azure', cost: 2340, performance: 8.8, color: '#f97316' }
+                    ]
+
+                    // scales
+                    const costMin = 2000
+                    const costMax = 5000
+                    const perfMin = 8.0
+                    const perfMax = 10.0
+
+                    const xForCost = (c: number) => ((c - costMin) / (costMax - costMin)) * 400
+                    const yForPerf = (p: number) => 220 - ((p - perfMin) / (perfMax - perfMin)) * 220
+
+                    return providers.map((p) => (
+                      <g key={p.id}>
+                        <circle cx={xForCost(p.cost)} cy={yForPerf(p.performance)} r={8} fill={p.color} className="cursor-pointer" />
+                        <text x={xForCost(p.cost) + 12} y={yForPerf(p.performance) + 4} className="text-xs font-medium text-slate-700">{p.label}</text>
+                      </g>
+                    ))
+                  })()
+                }
+              </g>
+            </svg>
             <p className="text-sm text-slate-600 mt-4">Performance Score vs Monthly Cost</p>
           </div>
         </div>
