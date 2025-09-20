@@ -1,4 +1,3 @@
-/* Remove default root styling to allow full width */
 #root {
   width: 100%;
   height: 100vh;
@@ -42,7 +41,6 @@
   color: #888;
 }
 
-/* Professional Enterprise Styles */
 .enterprise-gradient {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
@@ -130,7 +128,6 @@
   box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
 }
 
-/* Status indicators */
 .status-optimal {
   background: linear-gradient(135deg, #10b981, #059669);
 }
@@ -147,7 +144,6 @@
   background: linear-gradient(135deg, #6b7280, #4b5563);
 }
 
-/* Custom scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -166,7 +162,6 @@
   background: #94a3b8;
 }
 
-/* Loading skeleton */
 .skeleton {
   background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200% 100%;
@@ -182,7 +177,6 @@
   }
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   #root {
     padding: 1rem;
@@ -193,18 +187,15 @@
   }
 }
 
-/* Focus states for accessibility */
 .focus-ring:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
 
-/* Smooth transitions for all interactive elements */
 button, a, input, select, textarea {
   transition: all 0.2s ease-in-out;
 }
 
-/* Professional typography */
 .professional-text {
   font-feature-settings: "kern" 1, "liga" 1;
   -webkit-font-smoothing: antialiased;

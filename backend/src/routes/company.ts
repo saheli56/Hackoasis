@@ -5,7 +5,6 @@ import { z } from 'zod'
 import fs from 'fs'
 import path from 'path'
 
-// In-memory storage (replace with DB later)
 let companyProfile: any = null
 const instances: any[] = []
 
@@ -26,22 +25,18 @@ const instanceSchema = z.object({
   storageGb: z.number().nonnegative(),
   monthlyCost: z.number().nonnegative(),
   environment: z.enum(['prod','staging','dev']),
-  // Performance & Analytics fields
   status: z.enum(['running','stopped','terminated','pending']),
   cpuUtilization: z.number().min(0).max(100),
   memoryUtilization: z.number().min(0).max(100),
   networkInGb: z.number().nonnegative(),
   networkOutGb: z.number().nonnegative(),
-  // Cost breakdown
   computeCost: z.number().nonnegative(),
   storageCost: z.number().nonnegative(),
   networkCost: z.number().nonnegative(),
-  // Metadata for analytics
   tags: z.array(z.string()),
   createdDate: z.string(),
   lastActivity: z.string(),
-  uptime: z.number().min(0).max(744), // Max hours in a month
-  // Usage patterns
+  uptime: z.number().min(0).max(744), 
   peakCpuUsage: z.number().min(0).max(100),
   avgResponseTime: z.number().nonnegative(),
   requestsPerHour: z.number().nonnegative()
@@ -154,7 +149,6 @@ router.post('/import-csv', upload.single('file'), async (req, res) => {
         .on('end', () => resolve())
         .on('error', (err: any) => reject(err))
     })
-    // add valid
     parsed.forEach(p => instances.push(p))
     return res.json({ success: true, imported: parsed.length, errors, instances })
   } catch (e: any) {

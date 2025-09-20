@@ -30,7 +30,6 @@ function App() {
 
   return (
     <div className="min-h-screen w-full bg-slate-50">
-      {/* Header */}
       <header className="bg-white border-b border-slate-200 shadow-sm w-full">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -71,7 +70,6 @@ function App() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'overview' && <OverviewTab />}
         {activeTab === 'analytics' && <AnalyticsTab />}
@@ -82,11 +80,9 @@ function App() {
   )
 }
 
-// Overview Tab Component
 function OverviewTab() {
   return (
     <div className="space-y-8">
-      {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Total Cost"
@@ -118,7 +114,6 @@ function OverviewTab() {
         />
       </div>
 
-      {/* Charts and Performance Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Cost Trend</h3>
@@ -130,7 +125,6 @@ function OverviewTab() {
         </div>
       </div>
 
-      {/* Cloud Provider Overview and Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -162,7 +156,6 @@ function OverviewTab() {
         </div>
       </div>
 
-      {/* Recent Activity */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">Recent Activity</h3>
         <div className="space-y-3">
@@ -189,7 +182,6 @@ function OverviewTab() {
   )
 }
 
-// Metric Card Component
 function MetricCard({ title, value, change, trend, icon }: {
   title: string
   value: string
@@ -220,7 +212,6 @@ function MetricCard({ title, value, change, trend, icon }: {
   )
 }
 
-// Cloud Provider Card Component
 function CloudProviderCard({ provider, instances, cost, status, utilization }: {
   provider: string
   instances: number
@@ -270,21 +261,18 @@ function CloudProviderCard({ provider, instances, cost, status, utilization }: {
   )
 }
 
-// Analytics Tab Component
 function AnalyticsTab() {
   const [timeRange, setTimeRange] = useState('7d')
   const [selectedMetric, setSelectedMetric] = useState('cost')
 
   return (
     <div className="space-y-8">
-      {/* Analytics Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Analytics Dashboard</h2>
           <p className="text-slate-600 mt-1">Deep insights into your multi-cloud performance and costs</p>
         </div>
         
-        {/* Time Range Selector */}
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium text-slate-700">Time Range:</span>
           <select
@@ -301,7 +289,6 @@ function AnalyticsTab() {
         </div>
       </div>
 
-      {/* Metric Type Selector */}
       <div className="flex flex-wrap gap-2">
         {[
           { id: 'cost', label: 'Cost Analytics', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1' },
@@ -326,7 +313,6 @@ function AnalyticsTab() {
         ))}
       </div>
 
-      {/* Analytics Content */}
       {selectedMetric === 'cost' && <CostAnalytics timeRange={timeRange} />}
       {selectedMetric === 'performance' && <PerformanceAnalytics timeRange={timeRange} />}
       {selectedMetric === 'resources' && <ResourceAnalytics timeRange={timeRange} />}
@@ -342,14 +328,12 @@ function OptimizationTab() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">AI-Powered Optimization</h2>
           <p className="text-slate-600 mt-1">Intelligent workload placement recommendations using Gemini AI</p>
         </div>
         
-        {/* AI Status Indicator */}
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2 px-3 py-2 bg-green-50 rounded-lg border border-green-200">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -364,7 +348,6 @@ function OptimizationTab() {
         </div>
       </div>
 
-      {/* Workload & Optimization Type Selectors */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Select Workload</h3>
@@ -429,13 +412,11 @@ function OptimizationTab() {
         </div>
       </div>
 
-      {/* AI Recommendations Panel */}
       <AIRecommendationsPanel 
         workload={selectedWorkload} 
         optimizationType={optimizationType}
       />
 
-      {/* Simulation Panel */}
       {showSimulation && (
         <SimulationPanel 
           workload={selectedWorkload} 
@@ -443,15 +424,12 @@ function OptimizationTab() {
         />
       )}
 
-      {/* Gemini AI Insights */}
       <GeminiInsightsPanel workload={selectedWorkload} />
     </div>
   )
 }
 
-// Cost Analytics Component
 function CostAnalytics({ timeRange }: { timeRange: string }) {
-  // Use timeRange for future dynamic data loading
   console.log('Cost analytics for time range:', timeRange)
   const costData = [
     { provider: 'AWS', current: 4520, previous: 4200, change: '+7.6%', trend: 'up' },
@@ -461,7 +439,6 @@ function CostAnalytics({ timeRange }: { timeRange: string }) {
 
   return (
     <div className="space-y-6">
-      {/* Cost Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {costData.map((item) => (
           <div key={item.provider} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -483,7 +460,6 @@ function CostAnalytics({ timeRange }: { timeRange: string }) {
         ))}
       </div>
 
-      {/* Cost Trend Chart */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">Cost Trends</h3>
         <div className="h-80 flex items-end justify-center space-x-8">
@@ -519,7 +495,6 @@ function CostAnalytics({ timeRange }: { timeRange: string }) {
         </div>
       </div>
 
-      {/* Cost Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Cost by Service Type</h3>
@@ -571,13 +546,10 @@ function CostAnalytics({ timeRange }: { timeRange: string }) {
   )
 }
 
-// Performance Analytics Component
 function PerformanceAnalytics({ timeRange }: { timeRange: string }) {
-  // Use timeRange for future dynamic data loading
   console.log('Performance analytics for time range:', timeRange)
   return (
     <div className="space-y-6">
-      {/* Performance Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Avg Response Time', value: '245ms', change: '-12%', trend: 'down', color: 'green' },
@@ -597,7 +569,6 @@ function PerformanceAnalytics({ timeRange }: { timeRange: string }) {
         ))}
       </div>
 
-      {/* Performance Trends */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Response Time Trends</h3>
@@ -630,7 +601,6 @@ function PerformanceAnalytics({ timeRange }: { timeRange: string }) {
         </div>
       </div>
 
-      {/* Provider Performance Comparison */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">Provider Performance Comparison</h3>
         <div className="overflow-x-auto">
@@ -666,13 +636,10 @@ function PerformanceAnalytics({ timeRange }: { timeRange: string }) {
   )
 }
 
-// Resource Analytics Component
 function ResourceAnalytics({ timeRange }: { timeRange: string }) {
-  // Use timeRange for future dynamic data loading
   console.log('Resource analytics for time range:', timeRange)
   return (
     <div className="space-y-6">
-      {/* Resource Utilization Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
           { resource: 'CPU', utilized: 78, total: 100, unit: '%' },
@@ -694,7 +661,6 @@ function ResourceAnalytics({ timeRange }: { timeRange: string }) {
         ))}
       </div>
 
-      {/* Resource Trends */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">CPU Utilization Trends</h3>
@@ -727,7 +693,6 @@ function ResourceAnalytics({ timeRange }: { timeRange: string }) {
         </div>
       </div>
 
-      {/* Instance Details */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">Instance Resource Details</h3>
         <div className="overflow-x-auto">
@@ -774,9 +739,7 @@ function ResourceAnalytics({ timeRange }: { timeRange: string }) {
   )
 }
 
-// Comparison Analytics Component
 function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
-  // Use timeRange for future dynamic data loading
   console.log('Comparison analytics for time range:', timeRange)
 
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -788,7 +751,6 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
     lines: []
   })
 
-  // interactive tooltip state is used with SVG circles below
 
   type TooltipPayload = { title: string; cost: string; performance: string; reliability: string; note: string }
   function showTooltip(e: React.MouseEvent, p: TooltipPayload) {
@@ -819,7 +781,6 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
   }
   return (
     <div className="space-y-6">
-      {/* Provider Comparison Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
           { provider: 'AWS', score: 8.5, cost: '$4,520', performance: 9.2, reliability: 9.5 },
@@ -850,33 +811,25 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
         ))}
       </div>
 
-      {/* Cost vs Performance Scatter Plot */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">Cost vs Performance Analysis</h3>
         <div className="h-80 flex items-center justify-center bg-slate-50 rounded-lg">
           <div ref={containerRef} className="text-center relative">
             <svg width="520" height="300" viewBox="0 0 520 300" className="bg-white rounded-lg shadow-sm border border-slate-200">
-              {/* margins */}
               <g transform="translate(50,20)">
-                {/* grid lines and axes */}
                 <g>
-                  {/* vertical grid */}
                   {[0, 1, 2, 3, 4, 5].map((i) => (
                     <line key={`v-${i}`} x1={(i * 80)} y1={0} x2={(i * 80)} y2={220} stroke="#eef2f7" />
                   ))}
-                  {/* horizontal grid */}
                   {[0, 1, 2, 3, 4].map((i) => (
                     <line key={`h-${i}`} x1={0} y1={(i * 55)} x2={400} y2={(i * 55)} stroke="#eef2f7" />
                   ))}
                 </g>
 
-                {/* axes labels */}
                 <text x={200} y={250} textAnchor="middle" className="text-slate-500">Monthly Cost (USD)</text>
                 <text x={-30} y={110} transform="rotate(-90 -30 110)" textAnchor="middle" className="text-slate-500">Performance Score</text>
 
-                {/* data points */}
                 {
-                  // define raw provider data
                   (() => {
                     const providers = [
                       { id: 'aws', label: 'AWS', cost: 4520, performance: 9.2, reliability: 9.5, color: '#1d4ed8', note: 'High Cost, High Performance' },
@@ -884,7 +837,6 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
                       { id: 'azure', label: 'Azure', cost: 2340, performance: 8.8, reliability: 9.1, color: '#f97316', note: 'Low Cost, Medium Performance' }
                     ]
 
-                    // scales
                     const costMin = 2000
                     const costMax = 5000
                     const perfMin = 8.0
@@ -926,7 +878,6 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
         </div>
       </div>
 
-      {/* ROI Analysis */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Return on Investment</h3>
@@ -977,9 +928,7 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
   )
 }
 
-// AI Recommendations Panel Component
 function AIRecommendationsPanel({ workload, optimizationType }: { workload: string; optimizationType: string }) {
-  // Dynamic Gemini-backed recommendations (calls backend API)
   interface Recommendation {
     id: string
     title: string
@@ -1020,7 +969,6 @@ function AIRecommendationsPanel({ workload, optimizationType }: { workload: stri
       if (e.name === 'AbortError') return
       console.error('Failed to load recommendations', e)
       setError(e.message || 'Failed to load recommendations')
-      // Provide minimal graceful fallback so UI not empty
       setRecs((prev) => prev.length ? prev : [
         {
           id: 'fallback-1',
@@ -1040,12 +988,10 @@ function AIRecommendationsPanel({ workload, optimizationType }: { workload: stri
     }
   }
 
-  // Initial + dependency-based fetch
   useEffect(() => {
     const ac = new AbortController()
     fetchRecommendations(ac.signal)
     return () => ac.abort()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workload, optimizationType])
 
   function providerColor(p: string) {
@@ -1164,9 +1110,7 @@ function AIRecommendationsPanel({ workload, optimizationType }: { workload: stri
   )
 }
 
-// Simulation Panel Component
 function SimulationPanel({ workload, optimizationType }: { workload: string; optimizationType: string }) {
-  // Use parameters for future dynamic simulation
   console.log('Running simulation for:', workload, 'optimizing for:', optimizationType)
   const [selectedProvider, setSelectedProvider] = useState('gcp')
   const [budgetLimit, setBudgetLimit] = useState(2000)
@@ -1181,7 +1125,6 @@ function SimulationPanel({ workload, optimizationType }: { workload: string; opt
       <h3 className="text-lg font-semibold text-slate-900 mb-6">Migration Simulation</h3>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Simulation Controls */}
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Target Provider</label>
@@ -1223,7 +1166,6 @@ function SimulationPanel({ workload, optimizationType }: { workload: string; opt
           </div>
         </div>
 
-        {/* Simulation Results */}
         <div className="space-y-4">
           <h4 className="font-medium text-slate-900">Projected Impact</h4>
           
@@ -1258,7 +1200,6 @@ function SimulationPanel({ workload, optimizationType }: { workload: string; opt
   )
 }
 
-// Gemini Insights Panel Component
 function GeminiInsightsPanel({ workload }: { workload: string }) {
   const insights = [
     {

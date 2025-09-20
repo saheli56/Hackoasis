@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 
-// Data interfaces
 export interface CompanyProfile {
 	name: string
 	industry: string
@@ -19,24 +18,20 @@ export interface CloudInstanceInput {
 	storageGb: number
 	monthlyCost: number
 	environment: 'prod' | 'staging' | 'dev'
-	// Performance & Analytics fields
 	status: 'running' | 'stopped' | 'terminated' | 'pending'
-	cpuUtilization: number // 0-100%
-	memoryUtilization: number // 0-100%
-	networkInGb: number // Monthly network in GB
-	networkOutGb: number // Monthly network out GB
-	// Cost breakdown
+	cpuUtilization: number 
+	memoryUtilization: number 
+	networkInGb: number 
+	networkOutGb: number 
 	computeCost: number
 	storageCost: number
 	networkCost: number
-	// Metadata for analytics
-	tags: string[] // For categorization
-	createdDate: string // ISO date
-	lastActivity: string // ISO date
-	uptime: number // Hours per month
-	// Usage patterns
-	peakCpuUsage: number // 0-100%
-	avgResponseTime: number // milliseconds
+	tags: string[]
+	createdDate: string 
+	lastActivity: string 
+	uptime: number
+	peakCpuUsage: number 
+	avgResponseTime: number 
 	requestsPerHour: number
 }
 
@@ -62,22 +57,18 @@ const emptyInstance: CloudInstanceInput = {
 	storageGb: 50,
 	monthlyCost: 0,
 	environment: 'dev',
-	// Performance & Analytics defaults
 	status: 'running',
 	cpuUtilization: 70,
 	memoryUtilization: 60,
 	networkInGb: 10,
 	networkOutGb: 15,
-	// Cost breakdown defaults
 	computeCost: 0,
 	storageCost: 0,
 	networkCost: 0,
-	// Metadata defaults
 	tags: [],
 	createdDate: new Date().toISOString(),
 	lastActivity: new Date().toISOString(),
-	uptime: 720, // 30 days * 24 hours
-	// Usage patterns defaults
+	uptime: 720, 
 	peakCpuUsage: 85,
 	avgResponseTime: 200,
 	requestsPerHour: 1000
@@ -85,7 +76,6 @@ const emptyInstance: CloudInstanceInput = {
 
 type Step = 1 | 2 | 3 | 4 | 5
 
-// Utility for class merge
 function cx(...classes: (string | false | undefined)[]) { return classes.filter(Boolean).join(' ') }
 
 const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).env.VITE_API_BASE || 'http://localhost:5000', onCompleted }) => {
@@ -106,7 +96,6 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 	const [csvPreview, setCsvPreview] = useState<CloudInstanceInput[]>([])
 	const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-	// Persist partial progress
 	useEffect(() => { localStorage.setItem('onboard_profile', JSON.stringify(profile)) }, [profile])
 	useEffect(() => { localStorage.setItem('onboard_instances', JSON.stringify(instances)) }, [instances])
 
@@ -166,7 +155,6 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 	}
 
 	function parseCsvLine(line: string): CloudInstanceInput | null {
-		// Expected headers: name,provider,region,type,cpu,memoryGb,storageGb,monthlyCost,environment,status,cpuUtilization,memoryUtilization,networkInGb,networkOutGb,computeCost,storageCost,networkCost,tags,uptime,peakCpuUsage,avgResponseTime,requestsPerHour
 		const parts = line.split(',').map(p => p.trim())
 		if (parts.length < 22) return null
 		const [name, providerRaw, region, type, cpuStr, memStr, storageStr, costStr, envRaw, statusRaw, cpuUtilStr, memUtilStr, netInStr, netOutStr, compCostStr, storCostStr, netCostStr, tagsStr, uptimeStr, peakCpuStr, respTimeStr, reqHourStr] = parts
@@ -232,7 +220,6 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 		setUploadError(null)
 		try {
 			const formData = new FormData()
-			// Reconstruct CSV to send (original file not stored; for simplicity)
 			const header = 'name,provider,region,type,cpu,memoryGb,storageGb,monthlyCost,environment'
 			const csvBody = csvPreview.map(i => [i.name,i.provider,i.region,i.type,i.cpu,i.memoryGb,i.storageGb,i.monthlyCost,i.environment].join(',')).join('\n')
 			const blob = new Blob([header+'\n'+csvBody], { type: 'text/csv' })
@@ -258,7 +245,7 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 		setStep(5)
 	}
 
-	// Step components
+	
 	const steps = [
 		{ id: 1, label: 'Company Profile' },
 		{ id: 2, label: 'Manual Instances' },
@@ -272,7 +259,6 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 			<div className="w-full max-w-5xl">
 				<h1 className="text-2xl font-bold text-slate-900 mb-6">First-time Setup</h1>
 
-				{/* Progress Bar */}
 				<ol className="flex items-center mb-10">
 					{steps.map((s, idx) => {
 						const active = step === s.id
@@ -343,7 +329,6 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 							</div>
 							{instanceError && <div className="p-3 rounded bg-red-50 border border-red-200 text-sm text-red-700">{instanceError}</div>}
 							
-							{/* Basic Instance Details */}
 							<div className="mb-6">
 								<h3 className="text-md font-medium text-slate-900 mb-4">Basic Instance Details</h3>
 								<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -387,7 +372,6 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 								</div>
 							</div>
 
-							{/* Resource Specifications */}
 							<div className="mb-6">
 								<h3 className="text-md font-medium text-slate-900 mb-4">Resource Specifications</h3>
 								<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -410,7 +394,6 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 								</div>
 							</div>
 
-							{/* Performance Metrics */}
 							<div className="mb-6">
 								<h3 className="text-md font-medium text-slate-900 mb-4">Performance Metrics</h3>
 								<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -433,7 +416,6 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 								</div>
 							</div>
 
-							{/* Network & Usage */}
 							<div className="mb-6">
 								<h3 className="text-md font-medium text-slate-900 mb-4">Network & Usage Patterns</h3>
 								<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -452,7 +434,7 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 								</div>
 							</div>
 
-							{/* Cost Breakdown */}
+
 							<div className="mb-6">
 								<h3 className="text-md font-medium text-slate-900 mb-4">Cost Breakdown (Monthly)</h3>
 								<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -475,7 +457,7 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 								</div>
 							</div>
 
-							{/* Tags */}
+
 							<div className="mb-6">
 								<h3 className="text-md font-medium text-slate-900 mb-4">Tags & Metadata</h3>
 								<div className="grid grid-cols-1 gap-4">

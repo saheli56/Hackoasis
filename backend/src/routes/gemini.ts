@@ -3,7 +3,6 @@ import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 
 const router = Router();
 
-// Basic JSON schema expectation for recommendations
 const recommendationOutputFormat = {
   type: SchemaType.OBJECT,
   properties: {
@@ -56,7 +55,6 @@ router.post('/recommendations', async (req, res) => {
 
     let parsed: any;
     try {
-      // Attempt to find JSON substring if model adds formatting
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       parsed = JSON.parse(jsonMatch ? jsonMatch[0] : text);
     } catch (err) {
@@ -67,7 +65,6 @@ router.post('/recommendations', async (req, res) => {
       return res.status(500).json({ error: 'Invalid structure from Gemini', raw: parsed });
     }
 
-    // Basic sanitization & fallback for missing fields
     const recommendations = parsed.recommendations.slice(0,3).map((r: any, idx: number) => ({
       id: r.id || `rec-${idx+1}`,
       title: r.title || 'Untitled Recommendation',

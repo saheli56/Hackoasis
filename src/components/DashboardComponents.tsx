@@ -1,4 +1,3 @@
-// Cost Trend Chart Component
 export function CostTrendChart() {
   const data = [
     { month: 'Jan', aws: 4200, gcp: 3800, azure: 2100 },
@@ -59,7 +58,6 @@ export function CostTrendChart() {
   )
 }
 
-// Alerts Panel Component
 export function AlertsPanel() {
   const alerts = [
     {
@@ -167,7 +165,6 @@ export function AlertsPanel() {
   )
 }
 
-// Performance Metrics Component
 export function PerformanceMetrics() {
   const metrics = [
     { label: 'Average Response Time', value: '245ms', change: '-12%', trend: 'down' },
