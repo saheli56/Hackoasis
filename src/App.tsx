@@ -51,11 +51,11 @@ function App() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
                     activeTab === tab.id
-                      ? 'bg-blue-600 text-white border border-blue-500 shadow-sm'
-                      : 'text-slate-700 hover:text-white hover:bg-slate-100 bg-white border border-slate-200'
+                      ? 'bg-blue-700 text-white border border-blue-700 shadow-sm'
+                      : 'bg-slate-700 text-white hover:bg-slate-600 border border-slate-700'
                   }`}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
                   </svg>
                   <span>{tab.label}</span>
@@ -309,11 +309,11 @@ function AnalyticsTab() {
             onClick={() => setSelectedMetric(metric.id)}
             className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
               selectedMetric === metric.id
-                ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200'
+                ? 'bg-blue-700 text-white border border-blue-700 shadow-sm'
+                : 'bg-slate-700 text-white hover:bg-slate-600 border border-slate-700'
             }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={metric.icon} />
             </svg>
             <span>{metric.label}</span>
