@@ -461,37 +461,110 @@ function CostAnalytics({ timeRange }: { timeRange: string }) {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Cost Trends</h3>
-        <div className="h-80 flex items-end justify-center space-x-8">
-          {[
-            { month: 'Jan', aws: 4200, gcp: 3800, azure: 2100 },
-            { month: 'Feb', aws: 4500, gcp: 4200, azure: 2300 },
-            { month: 'Mar', aws: 4800, gcp: 3900, azure: 2500 },
-            { month: 'Apr', aws: 4600, gcp: 4100, azure: 2400 },
-            { month: 'May', aws: 4900, gcp: 4300, azure: 2600 },
-            { month: 'Jun', aws: 4700, gcp: 4000, azure: 2200 }
-          ].map((item) => (
-            <div key={item.month} className="flex flex-col items-center space-y-2">
-              <div className="flex space-x-1">
-                <div
-                  className="w-6 bg-orange-500 rounded-t"
-                  style={{ height: `${(item.aws / 5000) * 200}px` }}
-                  title={`AWS: $${item.aws}`}
-                ></div>
-                <div
-                  className="w-6 bg-blue-500 rounded-t"
-                  style={{ height: `${(item.gcp / 5000) * 200}px` }}
-                  title={`GCP: $${item.gcp}`}
-                ></div>
-                <div
-                  className="w-6 bg-green-500 rounded-t"
-                  style={{ height: `${(item.azure / 5000) * 200}px` }}
-                  title={`Azure: $${item.azure}`}
-                ></div>
-              </div>
-              <span className="text-xs font-medium text-slate-600">{item.month}</span>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-slate-900">Cost Trends Analysis</h3>
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-slate-600">Total: <span className="font-semibold text-slate-900">$65.2k</span></div>
+            <div className="text-sm text-red-600">↑ 3.2% vs last period</div>
+          </div>
+        </div>
+        
+        {/* Enhanced Chart with Grid Lines and Better Labels */}
+        <div className="relative">
+          {/* Y-axis labels */}
+          <div className="absolute left-0 top-0 h-64 flex flex-col justify-between text-xs text-slate-500 pr-2">
+            <span>$5k</span>
+            <span>$4k</span>
+            <span>$3k</span>
+            <span>$2k</span>
+            <span>$1k</span>
+            <span>$0</span>
+          </div>
+          
+          {/* Grid lines */}
+          <div className="ml-8 relative">
+            <div className="absolute inset-0 grid grid-rows-5 opacity-20">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="border-t border-slate-300"></div>
+              ))}
             </div>
-          ))}
+            
+            {/* Chart area */}
+            <div className="h-64 flex items-end justify-center space-x-6 pt-4">
+              {[
+                { month: 'Jan', aws: 4200, gcp: 3800, azure: 2100, total: 10100, instances: 89, savings: 0 },
+                { month: 'Feb', aws: 4500, gcp: 4200, azure: 2300, total: 11000, instances: 92, savings: 150 },
+                { month: 'Mar', aws: 4800, gcp: 3900, azure: 2500, total: 11200, instances: 88, savings: 320 },
+                { month: 'Apr', aws: 4600, gcp: 4100, azure: 2400, total: 11100, instances: 95, savings: 280 },
+                { month: 'May', aws: 4900, gcp: 4300, azure: 2600, total: 11800, instances: 98, savings: 410 },
+                { month: 'Jun', aws: 4700, gcp: 4000, azure: 2200, total: 10900, instances: 85, savings: 890 }
+              ].map((item) => (
+                <div key={item.month} className="flex flex-col items-center space-y-3 group">
+                  {/* Bars with enhanced styling */}
+                  <div className="flex space-x-1" style={{ height: '200px', alignItems: 'flex-end' }}>
+                    <div className="relative group">
+                      <div
+                        className="w-5 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105"
+                        style={{ height: `${(item.aws / 5000) * 180}px` }}
+                      ></div>
+                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        AWS: ${item.aws.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="relative group">
+                      <div
+                        className="w-5 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105"
+                        style={{ height: `${(item.gcp / 5000) * 180}px` }}
+                      ></div>
+                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        GCP: ${item.gcp.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="relative group">
+                      <div
+                        className="w-5 bg-gradient-to-t from-green-600 to-green-400 rounded-t cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105"
+                        style={{ height: `${(item.azure / 5000) * 180}px` }}
+                      ></div>
+                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        Azure: ${item.azure.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Enhanced month labels with more info */}
+                  <div className="text-center space-y-1">
+                    <span className="text-sm font-semibold text-slate-700">{item.month}</span>
+                    <div className="text-xs text-slate-600">
+                      <div>${(item.total/1000).toFixed(1)}k total</div>
+                      <div>{item.instances} instances</div>
+                      {item.savings > 0 && (
+                        <div className="text-green-600 font-medium">↓ ${item.savings} saved</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Legend with additional info */}
+        <div className="mt-6 flex items-center justify-between">
+          <div className="flex items-center space-x-6 text-sm">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-gradient-to-r from-orange-600 to-orange-400 rounded-full"></div>
+              <span className="text-slate-600">AWS ($4.7k current)</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"></div>
+              <span className="text-slate-600">GCP ($4.0k current)</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-gradient-to-r from-green-600 to-green-400 rounded-full"></div>
+              <span className="text-slate-600">Azure ($2.2k current)</span>
+            </div>
+          </div>
+          <div className="text-xs text-slate-500">6-month view • Hover for details</div>
         </div>
       </div>
 
