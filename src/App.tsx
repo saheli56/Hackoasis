@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import { CostTrendChart, AlertsPanel, PerformanceMetrics } from './components/DashboardComponents'
 
@@ -668,14 +668,53 @@ function ResourceAnalytics({ timeRange }: { timeRange: string }) {
 function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
   // Use timeRange for future dynamic data loading
   console.log('Comparison analytics for time range:', timeRange)
+
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [tooltip, setTooltip] = useState<{ visible: boolean; x: number; y: number; title: string; lines: string[] }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    title: '',
+    lines: []
+  })
+
+  // interactive tooltip state is used with SVG circles below
+
+  type TooltipPayload = { title: string; cost: string; performance: string; reliability: string; note: string }
+  function showTooltip(e: React.MouseEvent, p: TooltipPayload) {
+    const rect = containerRef.current?.getBoundingClientRect()
+    const clientX = e.clientX
+    const clientY = e.clientY
+    const x = rect ? clientX - rect.left : clientX
+    const y = rect ? clientY - rect.top : clientY
+
+    setTooltip({
+      visible: true,
+      x,
+      y,
+      title: p.title,
+      lines: [p.cost, `Performance: ${p.performance}`, `Reliability: ${p.reliability}`, p.note]
+    })
+  }
+
+  function moveTooltip(e: React.MouseEvent) {
+    const rect = containerRef.current?.getBoundingClientRect()
+    const x = rect ? e.clientX - rect.left : e.clientX
+    const y = rect ? e.clientY - rect.top : e.clientY
+    setTooltip(t => ({ ...t, x, y }))
+  }
+
+  function hideTooltip() {
+    setTooltip(t => ({ ...t, visible: false }))
+  }
   return (
     <div className="space-y-6">
       {/* Provider Comparison Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
           { provider: 'AWS', score: 8.5, cost: '$4,520', performance: 9.2, reliability: 9.5 },
-          { provider: 'Google Cloud', score: 8.8, cost: '$3,890', performance: 9.5, reliability: 9.3 },
-          { provider: 'Azure', score: 8.2, cost: '$2,340', performance: 8.8, reliability: 9.1 }
+              { provider: 'Google Cloud', score: 8.8, cost: '$3,890', performance: 9.5, reliability: 9.3 },
+              { provider: 'Azure', score: 8.2, cost: '$2,340', performance: 8.8, reliability: 9.1 }
         ].map((provider) => (
           <div key={provider.provider} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <div className="text-center mb-4">
@@ -705,7 +744,7 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">Cost vs Performance Analysis</h3>
         <div className="h-80 flex items-center justify-center bg-slate-50 rounded-lg">
-          <div className="text-center">
+          <div ref={containerRef} className="text-center relative">
             <svg width="520" height="300" viewBox="0 0 520 300" className="bg-white rounded-lg shadow-sm border border-slate-200">
               {/* margins */}
               <g transform="translate(50,20)">
@@ -730,9 +769,9 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
                   // define raw provider data
                   (() => {
                     const providers = [
-                      { id: 'aws', label: 'AWS', cost: 4520, performance: 9.2, color: '#1d4ed8' },
-                      { id: 'gcp', label: 'GCP', cost: 3890, performance: 9.5, color: '#059669' },
-                      { id: 'azure', label: 'Azure', cost: 2340, performance: 8.8, color: '#f97316' }
+                      { id: 'aws', label: 'AWS', cost: 4520, performance: 9.2, reliability: 9.5, color: '#1d4ed8', note: 'High Cost, High Performance' },
+                      { id: 'gcp', label: 'GCP', cost: 3890, performance: 9.5, reliability: 9.3, color: '#059669', note: 'Medium Cost, High Performance' },
+                      { id: 'azure', label: 'Azure', cost: 2340, performance: 8.8, reliability: 9.1, color: '#f97316', note: 'Low Cost, Medium Performance' }
                     ]
 
                     // scales
@@ -746,7 +785,16 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
 
                     return providers.map((p) => (
                       <g key={p.id}>
-                        <circle cx={xForCost(p.cost)} cy={yForPerf(p.performance)} r={8} fill={p.color} className="cursor-pointer" />
+                        <circle
+                          cx={xForCost(p.cost)}
+                          cy={yForPerf(p.performance)}
+                          r={8}
+                          fill={p.color}
+                          className="cursor-pointer"
+                          onMouseEnter={(e) => showTooltip(e as unknown as React.MouseEvent, { title: p.label, cost: `$${p.cost}`, performance: `${p.performance}/10`, reliability: `${p.reliability}/10`, note: p.note })}
+                          onMouseMove={(e) => moveTooltip(e as unknown as React.MouseEvent)}
+                          onMouseLeave={() => hideTooltip()}
+                        />
                         <text x={xForCost(p.cost) + 12} y={yForPerf(p.performance) + 4} className="text-xs font-medium text-slate-700">{p.label}</text>
                       </g>
                     ))
@@ -754,6 +802,15 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
                 }
               </g>
             </svg>
+            {tooltip.visible && (
+              <div className="absolute z-50 w-44 bg-white border border-slate-200 rounded-lg shadow-lg p-3 text-left text-sm" style={{ left: tooltip.x + 12, top: tooltip.y + 12 }}>
+                <div className="font-medium text-slate-900 mb-1">{tooltip.title}</div>
+                {tooltip.lines.map((line, idx) => (
+                  <div key={idx} className="text-slate-600 text-xs">{line}</div>
+                ))}
+              </div>
+            )}
+
             <p className="text-sm text-slate-600 mt-4">Performance Score vs Monthly Cost</p>
           </div>
         </div>
