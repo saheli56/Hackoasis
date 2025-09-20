@@ -1,10 +1,16 @@
-import { Router } from 'express'
+import { Router, Request } from 'express'
 import multer from 'multer'
 import csvParser from 'csv-parser'
 import { z } from 'zod'
 import fs from 'fs'
 import path from 'path'
 
+// Extend Request type for multer
+interface MulterRequest extends Request {
+  file?: Express.Multer.File;
+}
+
+// In-memory storage (replace with DB later)
 let companyProfile: any = null
 const instances: any[] = []
 
@@ -96,7 +102,7 @@ router.get('/instances', (_req, res) => {
   return res.json({ instances })
 })
 
-router.post('/import-csv', upload.single('file'), async (req, res) => {
+router.post('/import-csv', upload.single('file'), async (req: MulterRequest, res) => {
   if (!req.file) return res.status(400).json({ error: 'File required' })
   const filePath = req.file.path
   const parsed: any[] = []
