@@ -331,10 +331,115 @@ function AnalyticsTab() {
 }
 
 function OptimizationTab() {
+  const [selectedWorkload, setSelectedWorkload] = useState('web-app-frontend')
+  const [optimizationType, setOptimizationType] = useState('cost')
+  const [showSimulation, setShowSimulation] = useState(false)
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
-      <h2 className="text-2xl font-bold text-slate-900 mb-4">AI Optimization</h2>
-      <p className="text-slate-600">Intelligent cost optimization and workload balancing coming soon...</p>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">AI-Powered Optimization</h2>
+          <p className="text-slate-600 mt-1">Intelligent workload placement recommendations using Gemini AI</p>
+        </div>
+        
+        {/* AI Status Indicator */}
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 px-3 py-2 bg-green-50 rounded-lg border border-green-200">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-green-700">Gemini AI Active</span>
+          </div>
+          <button 
+            onClick={() => setShowSimulation(!showSimulation)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+          >
+            {showSimulation ? 'Hide Simulation' : 'Run Simulation'}
+          </button>
+        </div>
+      </div>
+
+      {/* Workload & Optimization Type Selectors */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Select Workload</h3>
+          <div className="space-y-3">
+            {[
+              { id: 'web-app-frontend', name: 'Web App Frontend', provider: 'AWS', cost: '$450/mo', instances: 3 },
+              { id: 'api-backend', name: 'API Backend Services', provider: 'GCP', cost: '$1,200/mo', instances: 8 },
+              { id: 'database-cluster', name: 'Database Cluster', provider: 'AWS', cost: '$2,100/mo', instances: 5 },
+              { id: 'ml-pipeline', name: 'ML Training Pipeline', provider: 'Azure', cost: '$800/mo', instances: 2 }
+            ].map((workload) => (
+              <div
+                key={workload.id}
+                onClick={() => setSelectedWorkload(workload.id)}
+                className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
+                  selectedWorkload === workload.id
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium text-slate-900">{workload.name}</p>
+                    <p className="text-sm text-slate-600">Current: {workload.provider}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-slate-900">{workload.cost}</p>
+                    <p className="text-xs text-slate-500">{workload.instances} instances</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Optimization Goal</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { id: 'cost', label: 'Minimize Cost', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1' },
+              { id: 'performance', label: 'Maximize Performance', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+              { id: 'balanced', label: 'Balanced', icon: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707' },
+              { id: 'reliability', label: 'High Availability', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }
+            ].map((type) => (
+              <button
+                key={type.id}
+                onClick={() => setOptimizationType(type.id)}
+                className={`p-4 rounded-lg border transition-all duration-200 text-left ${
+                  optimizationType === type.id
+                    ? 'border-blue-600 bg-blue-600 text-white'
+                    : 'border-slate-700 bg-slate-700 text-white hover:bg-slate-600'
+                }`}
+              >
+                <div className="flex items-center space-x-2 mb-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={type.icon} />
+                  </svg>
+                  <span className="font-medium">{type.label}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* AI Recommendations Panel */}
+      <AIRecommendationsPanel 
+        workload={selectedWorkload} 
+        optimizationType={optimizationType}
+      />
+
+      {/* Simulation Panel */}
+      {showSimulation && (
+        <SimulationPanel 
+          workload={selectedWorkload} 
+          optimizationType={optimizationType}
+        />
+      )}
+
+      {/* Gemini AI Insights */}
+      <GeminiInsightsPanel workload={selectedWorkload} />
     </div>
   )
 }
@@ -862,6 +967,286 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
             ))}
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// AI Recommendations Panel Component
+function AIRecommendationsPanel({ workload, optimizationType }: { workload: string; optimizationType: string }) {
+  // Use parameters for future dynamic filtering
+  console.log('Generating recommendations for:', workload, 'optimizing for:', optimizationType)
+  const recommendations = [
+    {
+      id: 'rec-1',
+      title: 'Migrate to Google Cloud',
+      confidence: 92,
+      costSavings: 1450,
+      performanceGain: 15,
+      migrationTime: '2-3 hours',
+      reasoning: 'Lower compute costs and better performance for your workload type',
+      provider: 'gcp',
+      estimatedDowntime: '< 30 minutes'
+    },
+    {
+      id: 'rec-2', 
+      title: 'Switch to Azure Spot Instances',
+      confidence: 78,
+      costSavings: 890,
+      performanceGain: -5,
+      migrationTime: '1-2 hours',
+      reasoning: 'Significant cost reduction with acceptable performance trade-off',
+      provider: 'azure',
+      estimatedDowntime: '< 15 minutes'
+    },
+    {
+      id: 'rec-3',
+      title: 'Optimize Current AWS Setup',
+      confidence: 85,
+      costSavings: 340,
+      performanceGain: 8,
+      migrationTime: '30 minutes',
+      reasoning: 'Instance type optimization and reserved capacity',
+      provider: 'aws',
+      estimatedDowntime: 'No downtime'
+    }
+  ]
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-slate-900">AI Recommendations</h3>
+        <div className="flex items-center space-x-2 text-sm text-slate-600">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Powered by Gemini AI</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {recommendations.map((rec) => (
+          <div key={rec.id} className="border border-slate-200 rounded-lg p-5 hover:shadow-md transition-shadow duration-200">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-slate-900">{rec.title}</h4>
+              <div className="flex items-center space-x-1">
+                <div className={`w-2 h-2 rounded-full ${
+                  rec.provider === 'gcp' ? 'bg-green-500' :
+                  rec.provider === 'azure' ? 'bg-blue-500' : 'bg-orange-500'
+                }`}></div>
+                <span className="text-xs font-medium text-slate-600 uppercase">{rec.provider}</span>
+              </div>
+            </div>
+
+            <div className="space-y-3 mb-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">Confidence</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-16 bg-slate-200 rounded-full h-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full" 
+                      style={{ width: `${rec.confidence}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900">{rec.confidence}%</span>
+                </div>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-sm text-slate-600">Cost Savings</span>
+                <span className="text-sm font-bold text-green-600">${rec.costSavings}/mo</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-sm text-slate-600">Performance</span>
+                <span className={`text-sm font-medium ${
+                  rec.performanceGain >= 0 ? 'text-green-600' : 'text-orange-600'
+                }`}>
+                  {rec.performanceGain >= 0 ? '+' : ''}{rec.performanceGain}%
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-sm text-slate-600">Migration Time</span>
+                <span className="text-sm font-medium text-slate-900">{rec.migrationTime}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 mb-4">{rec.reasoning}</p>
+
+            <div className="flex space-x-2">
+              <button className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                Apply
+              </button>
+              <button className="flex-1 px-3 py-2 border border-slate-700 bg-slate-700 text-white text-sm rounded-lg hover:bg-slate-600 transition-colors duration-200">
+                Details
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Simulation Panel Component
+function SimulationPanel({ workload, optimizationType }: { workload: string; optimizationType: string }) {
+  // Use parameters for future dynamic simulation
+  console.log('Running simulation for:', workload, 'optimizing for:', optimizationType)
+  const [selectedProvider, setSelectedProvider] = useState('gcp')
+  const [budgetLimit, setBudgetLimit] = useState(2000)
+  
+  const simulationData = {
+    current: { cost: 1450, performance: 85, reliability: 92 },
+    projected: { cost: 890, performance: 92, reliability: 95 }
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <h3 className="text-lg font-semibold text-slate-900 mb-6">Migration Simulation</h3>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Simulation Controls */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Target Provider</label>
+            <select 
+              value={selectedProvider}
+              onChange={(e) => setSelectedProvider(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="gcp">Google Cloud Platform</option>
+              <option value="azure">Microsoft Azure</option>
+              <option value="aws">Amazon Web Services</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Budget Limit</label>
+            <div className="flex items-center space-x-2">
+              <input 
+                type="range" 
+                min="500" 
+                max="5000" 
+                value={budgetLimit}
+                onChange={(e) => setBudgetLimit(Number(e.target.value))}
+                className="flex-1"
+              />
+              <span className="text-sm font-medium text-slate-900 w-20">${budgetLimit}/mo</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <p className="text-xs text-slate-600 mb-1">Latency Requirement</p>
+              <p className="font-medium text-slate-900">&lt; 100ms</p>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <p className="text-xs text-slate-600 mb-1">Compliance</p>
+              <p className="font-medium text-slate-900">GDPR</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Simulation Results */}
+        <div className="space-y-4">
+          <h4 className="font-medium text-slate-900">Projected Impact</h4>
+          
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+              <p className="text-2xl font-bold text-green-600">-${simulationData.current.cost - simulationData.projected.cost}</p>
+              <p className="text-xs text-green-700">Monthly Savings</p>
+            </div>
+            <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-2xl font-bold text-blue-600">+{simulationData.projected.performance - simulationData.current.performance}%</p>
+              <p className="text-xs text-blue-700">Performance</p>
+            </div>
+            <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-200">
+              <p className="text-2xl font-bold text-purple-600">{simulationData.projected.reliability}%</p>
+              <p className="text-xs text-purple-700">Reliability</p>
+            </div>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-lg">
+            <h5 className="font-medium text-slate-900 mb-2">Migration Steps</h5>
+            <ol className="text-sm text-slate-600 space-y-1">
+              <li>1. Create GCP project and configure networking</li>
+              <li>2. Provision compute instances and load balancers</li>
+              <li>3. Migrate application data and configurations</li>
+              <li>4. Update DNS and perform cutover</li>
+              <li>5. Monitor and validate performance</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Gemini Insights Panel Component
+function GeminiInsightsPanel({ workload }: { workload: string }) {
+  const insights = [
+    {
+      type: 'cost-optimization',
+      title: 'Cost Optimization Opportunity',
+      message: 'Based on your usage patterns, switching to preemptible instances during off-peak hours could save an additional $320/month.',
+      confidence: 'High',
+      action: 'Configure Auto-scaling'
+    },
+    {
+      type: 'performance',
+      title: 'Performance Enhancement',
+      message: 'Your workload would benefit from SSD storage and higher memory allocation. Expected 25% performance improvement.',
+      confidence: 'Medium',
+      action: 'Upgrade Storage'
+    },
+    {
+      type: 'security',
+      title: 'Security Recommendation',
+      message: 'Consider enabling WAF and DDoS protection for your public-facing applications.',
+      confidence: 'High',
+      action: 'Review Security'
+    }
+  ]
+
+  return (
+    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200 p-6">
+      <div className="flex items-center space-x-2 mb-4">
+        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-slate-900">Gemini AI Insights</h3>
+        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Real-time</span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {insights.map((insight, index) => (
+          <div key={index} className="bg-white rounded-lg p-4 border border-slate-200">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-medium text-slate-900 text-sm">{insight.title}</h4>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                insight.confidence === 'High' ? 'bg-green-100 text-green-700' :
+                insight.confidence === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                'bg-slate-100 text-slate-700'
+              }`}>
+                {insight.confidence}
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 mb-3">{insight.message}</p>
+            <button className="w-full px-3 py-2 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors duration-200">
+              {insight.action}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 p-3 bg-white rounded-lg border border-slate-200">
+        <p className="text-xs text-slate-600 mb-2"><strong>Gemini Prompt Preview:</strong></p>
+        <code className="text-xs text-slate-800 bg-slate-50 p-2 rounded block">
+          "Analyze workload '{workload}' with current AWS setup. Consider cost optimization, performance, and reliability. Provide migration recommendations for GCP and Azure with confidence scores."
+        </code>
       </div>
     </div>
   )
