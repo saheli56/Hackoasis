@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { json } from 'express';
 import { geminiRouter } from './routes/gemini';
+import { companyRouter } from './routes/company';
 
 const app = express();
 app.use(cors());
@@ -13,6 +14,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/ai', geminiRouter);
+app.use('/api/company', companyRouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

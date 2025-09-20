@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import { CostTrendChart, AlertsPanel, PerformanceMetrics } from './components/DashboardComponents'
+import CompanySetupWizard from './components/CompanySetupWizard'
 
 function App() {
   const [activeTab, setActiveTab] = useState('overview')
   const [isLoading, setIsLoading] = useState(true)
+  const [onboarded, setOnboarded] = useState(() => localStorage.getItem('onboarding_completed') === 'true')
 
   useEffect(() => {
-    // Simulate loading data
-    const timer = setTimeout(() => setIsLoading(false), 1500)
+    const timer = setTimeout(() => setIsLoading(false), 800)
     return () => clearTimeout(timer)
   }, [])
 
@@ -21,6 +22,10 @@ function App() {
         </div>
       </div>
     )
+  }
+
+  if (!onboarded) {
+    return <CompanySetupWizard onCompleted={() => { localStorage.setItem('onboarding_completed','true'); setOnboarded(true) }} />
   }
 
   return (

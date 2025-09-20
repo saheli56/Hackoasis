@@ -33,6 +33,29 @@ body {
   height: 100%;
 }
 
+/* Force readable text in form controls (overrides dark root color) */
+input, select, textarea {
+  color: #0f172a; /* slate-900 */
+  background-color: #ffffff;
+  caret-color: #0f172a;
+}
+input::placeholder, textarea::placeholder {
+  color: #64748b; /* slate-500 */
+  opacity: 1;
+}
+input:disabled, select:disabled, textarea:disabled {
+  background-color: #f1f5f9; /* slate-100 */
+  color: #64748b;
+}
+/* Dark scheme override: keep inputs light for contrast */
+@media (prefers-color-scheme: dark) {
+  input, select, textarea {
+    background-color: #ffffff;
+    color: #0f172a;
+  }
+  input::placeholder, textarea::placeholder { color: #64748b; }
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
