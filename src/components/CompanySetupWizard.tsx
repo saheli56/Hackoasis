@@ -19,6 +19,25 @@ export interface CloudInstanceInput {
 	storageGb: number
 	monthlyCost: number
 	environment: 'prod' | 'staging' | 'dev'
+	// Performance & Analytics fields
+	status: 'running' | 'stopped' | 'terminated' | 'pending'
+	cpuUtilization: number // 0-100%
+	memoryUtilization: number // 0-100%
+	networkInGb: number // Monthly network in GB
+	networkOutGb: number // Monthly network out GB
+	// Cost breakdown
+	computeCost: number
+	storageCost: number
+	networkCost: number
+	// Metadata for analytics
+	tags: string[] // For categorization
+	createdDate: string // ISO date
+	lastActivity: string // ISO date
+	uptime: number // Hours per month
+	// Usage patterns
+	peakCpuUsage: number // 0-100%
+	avgResponseTime: number // milliseconds
+	requestsPerHour: number
 }
 
 interface Props {
@@ -42,7 +61,26 @@ const emptyInstance: CloudInstanceInput = {
 	memoryGb: 4,
 	storageGb: 50,
 	monthlyCost: 0,
-	environment: 'dev'
+	environment: 'dev',
+	// Performance & Analytics defaults
+	status: 'running',
+	cpuUtilization: 70,
+	memoryUtilization: 60,
+	networkInGb: 10,
+	networkOutGb: 15,
+	// Cost breakdown defaults
+	computeCost: 0,
+	storageCost: 0,
+	networkCost: 0,
+	// Metadata defaults
+	tags: [],
+	createdDate: new Date().toISOString(),
+	lastActivity: new Date().toISOString(),
+	uptime: 720, // 30 days * 24 hours
+	// Usage patterns defaults
+	peakCpuUsage: 85,
+	avgResponseTime: 200,
+	requestsPerHour: 1000
 }
 
 type Step = 1 | 2 | 3 | 4 | 5
@@ -128,21 +166,43 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 	}
 
 	function parseCsvLine(line: string): CloudInstanceInput | null {
-		// Expected headers: name,provider,region,type,cpu,memoryGb,storageGb,monthlyCost,environment
+		// Expected headers: name,provider,region,type,cpu,memoryGb,storageGb,monthlyCost,environment,status,cpuUtilization,memoryUtilization,networkInGb,networkOutGb,computeCost,storageCost,networkCost,tags,uptime,peakCpuUsage,avgResponseTime,requestsPerHour
 		const parts = line.split(',').map(p => p.trim())
-		if (parts.length < 9) return null
-		const [name, providerRaw, region, type, cpuStr, memStr, storageStr, costStr, envRaw] = parts
+		if (parts.length < 22) return null
+		const [name, providerRaw, region, type, cpuStr, memStr, storageStr, costStr, envRaw, statusRaw, cpuUtilStr, memUtilStr, netInStr, netOutStr, compCostStr, storCostStr, netCostStr, tagsStr, uptimeStr, peakCpuStr, respTimeStr, reqHourStr] = parts
 		const provider = providerRaw.toLowerCase() as any
 		const environment = envRaw.toLowerCase() as any
+		const status = statusRaw.toLowerCase() as any
 		const cpu = Number(cpuStr)
 		const memoryGb = Number(memStr)
 		const storageGb = Number(storageStr)
 		const monthlyCost = Number(costStr)
+		const cpuUtilization = Number(cpuUtilStr)
+		const memoryUtilization = Number(memUtilStr)
+		const networkInGb = Number(netInStr)
+		const networkOutGb = Number(netOutStr)
+		const computeCost = Number(compCostStr)
+		const storageCost = Number(storCostStr)
+		const networkCost = Number(netCostStr)
+		const tags = tagsStr ? tagsStr.split(';').filter(t => t.trim()) : []
+		const uptime = Number(uptimeStr)
+		const peakCpuUsage = Number(peakCpuStr)
+		const avgResponseTime = Number(respTimeStr)
+		const requestsPerHour = Number(reqHourStr)
+		
 		if (!name) return null
 		if (!['aws','gcp','azure'].includes(provider)) return null
 		if (!['prod','staging','dev'].includes(environment)) return null
-		if ([cpu,memoryGb,storageGb,monthlyCost].some(n => isNaN(n))) return null
-		return { name, provider, region, type, cpu, memoryGb, storageGb, monthlyCost, environment }
+		if (!['running','stopped','terminated','pending'].includes(status)) return null
+		if ([cpu,memoryGb,storageGb,monthlyCost,cpuUtilization,memoryUtilization,networkInGb,networkOutGb,computeCost,storageCost,networkCost,uptime,peakCpuUsage,avgResponseTime,requestsPerHour].some(n => isNaN(n))) return null
+		
+		return { 
+			name, provider, region, type, cpu, memoryGb, storageGb, monthlyCost, environment,
+			status, cpuUtilization, memoryUtilization, networkInGb, networkOutGb,
+			computeCost, storageCost, networkCost, tags, uptime, peakCpuUsage, avgResponseTime, requestsPerHour,
+			createdDate: new Date().toISOString(),
+			lastActivity: new Date().toISOString()
+		}
 	}
 
 	async function handleCsv(e: React.ChangeEvent<HTMLInputElement>) {
@@ -154,7 +214,7 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 			const lines = text.split(/\r?\n/).filter(l => l.trim())
 			if (!lines.length) throw new Error('CSV empty')
 			const header = lines[0].toLowerCase().replace(/\s+/g,'')
-			const expected = 'name,provider,region,type,cpu,memorygb,storagegb,monthlycost,environment'
+			const expected = 'name,provider,region,type,cpu,memorygb,storagegb,monthlycost,environment,status,cpuutilization,memoryutilization,networkingb,networkoutgb,computecost,storagecost,networkcost,tags,uptime,peakcpuusage,avgresponsetime,requestsperhour'
 			if (header !== expected) throw new Error('Invalid headers. Expected: ' + expected)
 			const parsed: CloudInstanceInput[] = []
 			for (let i=1;i<lines.length;i++) { const inst = parseCsvLine(lines[i]); if (inst) parsed.push(inst) }
@@ -282,52 +342,152 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 								</div>
 							</div>
 							{instanceError && <div className="p-3 rounded bg-red-50 border border-red-200 text-sm text-red-700">{instanceError}</div>}
-							<form onSubmit={addInstance} className="grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
-								<div>
-									<label className="block text-xs font-medium text-slate-700 mb-1">Name</label>
-									<input value={currentInstance.name} onChange={e => setCurrentInstance(ci => ({ ...ci, name: e.target.value }))} className="w-full rounded-lg border border-slate-300 px-3 py-2" required />
+							
+							{/* Basic Instance Details */}
+							<div className="mb-6">
+								<h3 className="text-md font-medium text-slate-900 mb-4">Basic Instance Details</h3>
+								<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Instance Name</label>
+										<input value={currentInstance.name} onChange={e => setCurrentInstance(ci => ({ ...ci, name: e.target.value }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Provider</label>
+										<select value={currentInstance.provider} onChange={e => setCurrentInstance(ci => ({ ...ci, provider: e.target.value as any }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+											<option value="aws">AWS</option>
+											<option value="gcp">GCP</option>
+											<option value="azure">Azure</option>
+										</select>
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Region</label>
+										<input value={currentInstance.region} onChange={e => setCurrentInstance(ci => ({ ...ci, region: e.target.value }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Instance Type</label>
+										<input value={currentInstance.type} onChange={e => setCurrentInstance(ci => ({ ...ci, type: e.target.value }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="e.g. t3.medium" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Environment</label>
+										<select value={currentInstance.environment} onChange={e => setCurrentInstance(ci => ({ ...ci, environment: e.target.value as any }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+											<option value="dev">Development</option>
+											<option value="staging">Staging</option>
+											<option value="prod">Production</option>
+										</select>
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Status</label>
+										<select value={currentInstance.status} onChange={e => setCurrentInstance(ci => ({ ...ci, status: e.target.value as any }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+											<option value="running">Running</option>
+											<option value="stopped">Stopped</option>
+											<option value="pending">Pending</option>
+											<option value="terminated">Terminated</option>
+										</select>
+									</div>
 								</div>
-								<div>
-									<label className="block text-xs font-medium text-slate-700 mb-1">Provider</label>
-									<select value={currentInstance.provider} onChange={e => setCurrentInstance(ci => ({ ...ci, provider: e.target.value as any }))} className="w-full rounded-lg border border-slate-300 px-3 py-2">
-										<option value="aws">AWS</option>
-										<option value="gcp">GCP</option>
-										<option value="azure">Azure</option>
-									</select>
+							</div>
+
+							{/* Resource Specifications */}
+							<div className="mb-6">
+								<h3 className="text-md font-medium text-slate-900 mb-4">Resource Specifications</h3>
+								<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">CPU Cores</label>
+										<input type="number" min={1} value={currentInstance.cpu} onChange={e => setCurrentInstance(ci => ({ ...ci, cpu: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Memory (GB)</label>
+										<input type="number" min={1} value={currentInstance.memoryGb} onChange={e => setCurrentInstance(ci => ({ ...ci, memoryGb: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Storage (GB)</label>
+										<input type="number" min={0} value={currentInstance.storageGb} onChange={e => setCurrentInstance(ci => ({ ...ci, storageGb: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Uptime (hrs/month)</label>
+										<input type="number" min={0} max={744} value={currentInstance.uptime} onChange={e => setCurrentInstance(ci => ({ ...ci, uptime: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
 								</div>
-								<div>
-									<label className="block text-xs font-medium text-slate-700 mb-1">Region</label>
-									<input value={currentInstance.region} onChange={e => setCurrentInstance(ci => ({ ...ci, region: e.target.value }))} className="w-full rounded-lg border border-slate-300 px-3 py-2" required />
+							</div>
+
+							{/* Performance Metrics */}
+							<div className="mb-6">
+								<h3 className="text-md font-medium text-slate-900 mb-4">Performance Metrics</h3>
+								<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">CPU Utilization (%)</label>
+										<input type="number" min={0} max={100} value={currentInstance.cpuUtilization} onChange={e => setCurrentInstance(ci => ({ ...ci, cpuUtilization: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Memory Utilization (%)</label>
+										<input type="number" min={0} max={100} value={currentInstance.memoryUtilization} onChange={e => setCurrentInstance(ci => ({ ...ci, memoryUtilization: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Peak CPU Usage (%)</label>
+										<input type="number" min={0} max={100} value={currentInstance.peakCpuUsage} onChange={e => setCurrentInstance(ci => ({ ...ci, peakCpuUsage: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Avg Response Time (ms)</label>
+										<input type="number" min={0} value={currentInstance.avgResponseTime} onChange={e => setCurrentInstance(ci => ({ ...ci, avgResponseTime: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
 								</div>
-								<div>
-									<label className="block text-xs font-medium text-slate-700 mb-1">Type</label>
-									<input value={currentInstance.type} onChange={e => setCurrentInstance(ci => ({ ...ci, type: e.target.value }))} className="w-full rounded-lg border border-slate-300 px-3 py-2" required />
+							</div>
+
+							{/* Network & Usage */}
+							<div className="mb-6">
+								<h3 className="text-md font-medium text-slate-900 mb-4">Network & Usage Patterns</h3>
+								<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Network In (GB/month)</label>
+										<input type="number" min={0} value={currentInstance.networkInGb} onChange={e => setCurrentInstance(ci => ({ ...ci, networkInGb: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Network Out (GB/month)</label>
+										<input type="number" min={0} value={currentInstance.networkOutGb} onChange={e => setCurrentInstance(ci => ({ ...ci, networkOutGb: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Requests/Hour</label>
+										<input type="number" min={0} value={currentInstance.requestsPerHour} onChange={e => setCurrentInstance(ci => ({ ...ci, requestsPerHour: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
 								</div>
-								<div>
-									<label className="block text-xs font-medium text-slate-700 mb-1">CPU</label>
-									<input type="number" min={1} value={currentInstance.cpu} onChange={e => setCurrentInstance(ci => ({ ...ci, cpu: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2" required />
+							</div>
+
+							{/* Cost Breakdown */}
+							<div className="mb-6">
+								<h3 className="text-md font-medium text-slate-900 mb-4">Cost Breakdown (Monthly)</h3>
+								<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Compute Cost ($)</label>
+										<input type="number" min={0} step="0.01" value={currentInstance.computeCost} onChange={e => setCurrentInstance(ci => ({ ...ci, computeCost: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Storage Cost ($)</label>
+										<input type="number" min={0} step="0.01" value={currentInstance.storageCost} onChange={e => setCurrentInstance(ci => ({ ...ci, storageCost: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Network Cost ($)</label>
+										<input type="number" min={0} step="0.01" value={currentInstance.networkCost} onChange={e => setCurrentInstance(ci => ({ ...ci, networkCost: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required />
+									</div>
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Total Cost ($)</label>
+										<input type="number" min={0} step="0.01" value={currentInstance.monthlyCost} onChange={e => setCurrentInstance(ci => ({ ...ci, monthlyCost: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-slate-50" required />
+									</div>
 								</div>
-								<div>
-									<label className="block text-xs font-medium text-slate-700 mb-1">Memory (GB)</label>
-									<input type="number" min={1} value={currentInstance.memoryGb} onChange={e => setCurrentInstance(ci => ({ ...ci, memoryGb: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2" required />
+							</div>
+
+							{/* Tags */}
+							<div className="mb-6">
+								<h3 className="text-md font-medium text-slate-900 mb-4">Tags & Metadata</h3>
+								<div className="grid grid-cols-1 gap-4">
+									<div>
+										<label className="block text-xs font-medium text-slate-700 mb-1">Tags (comma-separated)</label>
+										<input value={currentInstance.tags.join(', ')} onChange={e => setCurrentInstance(ci => ({ ...ci, tags: e.target.value.split(',').map(t => t.trim()).filter(t => t) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="e.g. web-server, production, high-priority" />
+									</div>
 								</div>
-								<div>
-									<label className="block text-xs font-medium text-slate-700 mb-1">Storage (GB)</label>
-									<input type="number" min={0} value={currentInstance.storageGb} onChange={e => setCurrentInstance(ci => ({ ...ci, storageGb: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2" required />
-								</div>
-								<div>
-									<label className="block text-xs font-medium text-slate-700 mb-1">Monthly Cost ($)</label>
-									<input type="number" min={0} value={currentInstance.monthlyCost} onChange={e => setCurrentInstance(ci => ({ ...ci, monthlyCost: Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2" required />
-								</div>
-								<div>
-									<label className="block text-xs font-medium text-slate-700 mb-1">Environment</label>
-									<select value={currentInstance.environment} onChange={e => setCurrentInstance(ci => ({ ...ci, environment: e.target.value as any }))} className="w-full rounded-lg border border-slate-300 px-3 py-2">
-										<option value="dev">Dev</option>
-										<option value="staging">Staging</option>
-										<option value="prod">Prod</option>
-									</select>
-								</div>
-								<div className="md:col-span-3 flex justify-end">
+							</div>
+
+							<form onSubmit={addInstance}>
+								<div className="flex justify-end">
 									<button disabled={addingInstance} className={cx('px-5 py-2 rounded-lg text-white text-sm font-medium', addingInstance ? 'bg-slate-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700')}>{addingInstance ? 'Adding...' : 'Add Instance'}</button>
 								</div>
 							</form>
@@ -381,10 +541,19 @@ const CompanySetupWizard: React.FC<Props> = ({ apiBase = (import.meta as any).en
 							{uploadError && <div className="p-3 rounded bg-red-50 border border-red-200 text-sm text-red-700">{uploadError}</div>}
 							<div className="space-y-5">
 								<div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs leading-relaxed">
-									<p className="font-medium text-slate-900 mb-2">Expected CSV Headers:</p>
-									<code className="block bg-white border border-slate-200 rounded p-2 mb-3 text-slate-800">name,provider,region,type,cpu,memoryGb,storageGb,monthlyCost,environment</code>
-									<p className="text-slate-600">Example row:</p>
-									<code className="block bg-white border border-slate-200 rounded p-2 mt-1 text-slate-800">api-server-01,aws,us-east-1,t3.medium,2,4,50,42,prod</code>
+									<p className="font-medium text-slate-900 mb-2">Expected CSV Headers (22 columns required):</p>
+									<code className="block bg-white border border-slate-200 rounded p-2 mb-3 text-slate-800 text-xs overflow-x-auto">name,provider,region,type,cpu,memoryGb,storageGb,monthlyCost,environment,status,cpuUtilization,memoryUtilization,networkInGb,networkOutGb,computeCost,storageCost,networkCost,tags,uptime,peakCpuUsage,avgResponseTime,requestsPerHour</code>
+									<p className="text-slate-600 mb-2">Example row:</p>
+									<code className="block bg-white border border-slate-200 rounded p-2 text-slate-800 text-xs overflow-x-auto">api-server-01,aws,us-east-1,t3.medium,2,4,50,42,prod,running,70,60,10,15,35,5,2,web-server;prod;critical,720,85,200,1000</code>
+									<div className="mt-3 text-xs text-slate-600">
+										<p><strong>Notes:</strong></p>
+										<ul className="list-disc ml-4 mt-1 space-y-1">
+											<li>Tags should be semicolon-separated (e.g., "web-server;prod;critical")</li>
+											<li>Utilization values are percentages (0-100)</li>
+											<li>Uptime is hours per month (max 744)</li>
+											<li>Cost fields are in USD</li>
+										</ul>
+									</div>
 								</div>
 								<div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
 									<input ref={fileInputRef} onChange={handleCsv} type="file" accept=".csv" className="text-sm" />
