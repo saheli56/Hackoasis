@@ -974,117 +974,187 @@ function ComparisonAnalytics({ timeRange }: { timeRange: string }) {
 
 // AI Recommendations Panel Component
 function AIRecommendationsPanel({ workload, optimizationType }: { workload: string; optimizationType: string }) {
-  // Use parameters for future dynamic filtering
-  console.log('Generating recommendations for:', workload, 'optimizing for:', optimizationType)
-  const recommendations = [
-    {
-      id: 'rec-1',
-      title: 'Migrate to Google Cloud',
-      confidence: 92,
-      costSavings: 1450,
-      performanceGain: 15,
-      migrationTime: '2-3 hours',
-      reasoning: 'Lower compute costs and better performance for your workload type',
-      provider: 'gcp',
-      estimatedDowntime: '< 30 minutes'
-    },
-    {
-      id: 'rec-2', 
-      title: 'Switch to Azure Spot Instances',
-      confidence: 78,
-      costSavings: 890,
-      performanceGain: -5,
-      migrationTime: '1-2 hours',
-      reasoning: 'Significant cost reduction with acceptable performance trade-off',
-      provider: 'azure',
-      estimatedDowntime: '< 15 minutes'
-    },
-    {
-      id: 'rec-3',
-      title: 'Optimize Current AWS Setup',
-      confidence: 85,
-      costSavings: 340,
-      performanceGain: 8,
-      migrationTime: '30 minutes',
-      reasoning: 'Instance type optimization and reserved capacity',
-      provider: 'aws',
-      estimatedDowntime: 'No downtime'
+  // Dynamic Gemini-backed recommendations (calls backend API)
+  interface Recommendation {
+    id: string
+    title: string
+    provider: 'aws' | 'gcp' | 'azure'
+    confidence: number
+    costSavings: number
+    performanceGain: number
+    migrationTime: string
+    reasoning: string
+    estimatedDowntime?: string
+  }
+
+  const [recs, setRecs] = useState<Recommendation[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const apiBase = (import.meta as any).env.VITE_API_BASE || 'http://localhost:5000'
+
+  async function fetchRecommendations(signal?: AbortSignal, isRefresh = false) {
+    if (loading && !isRefresh) return
+    setError(null)
+    if (isRefresh) setRefreshing(true); else setLoading(true)
+    try {
+      const resp = await fetch(`${apiBase}/api/ai/recommendations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workload, optimizationType }),
+        signal
+      })
+      if (!resp.ok) throw new Error(`API ${resp.status}`)
+      const json = await resp.json()
+      if (!json.recommendations) throw new Error('Malformed response (no recommendations)')
+      setRecs(json.recommendations)
+      setLastUpdated(new Date().toLocaleTimeString())
+    } catch (e: any) {
+      if (e.name === 'AbortError') return
+      console.error('Failed to load recommendations', e)
+      setError(e.message || 'Failed to load recommendations')
+      // Provide minimal graceful fallback so UI not empty
+      setRecs((prev) => prev.length ? prev : [
+        {
+          id: 'fallback-1',
+            title: 'Fallback: Optimize Current Setup',
+            provider: 'aws',
+            confidence: 70,
+            costSavings: 250,
+            performanceGain: 5,
+            migrationTime: '30 minutes',
+            reasoning: 'Basic instance right-sizing suggestion (offline fallback)',
+            estimatedDowntime: 'None'
+        }
+      ])
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
     }
-  ]
+  }
+
+  // Initial + dependency-based fetch
+  useEffect(() => {
+    const ac = new AbortController()
+    fetchRecommendations(ac.signal)
+    return () => ac.abort()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workload, optimizationType])
+
+  function providerColor(p: string) {
+    return p === 'gcp' ? 'bg-green-500' : p === 'azure' ? 'bg-blue-500' : 'bg-orange-500'
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-slate-900">AI Recommendations</h3>
-        <div className="flex items-center space-x-2 text-sm text-slate-600">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          <span>Powered by Gemini AI</span>
+        <div className="flex items-center space-x-3">
+          <h3 className="text-lg font-semibold text-slate-900">AI Recommendations</h3>
+          {lastUpdated && (
+            <span className="text-xs text-slate-500">Updated {lastUpdated}</span>
+          )}
+        </div>
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 text-sm text-slate-600">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Gemini</span>
+          </div>
+          <button
+            onClick={() => fetchRecommendations(undefined, true)}
+            disabled={loading || refreshing}
+            className={`px-3 py-2 text-sm rounded-lg border transition-colors duration-200 ${
+              loading || refreshing
+                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                : 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            {refreshing ? 'Refreshing...' : loading ? 'Loading...' : 'Refresh'}
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {recommendations.map((rec) => (
-          <div key={rec.id} className="border border-slate-200 rounded-lg p-5 hover:shadow-md transition-shadow duration-200">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-slate-900">{rec.title}</h4>
-              <div className="flex items-center space-x-1">
-                <div className={`w-2 h-2 rounded-full ${
-                  rec.provider === 'gcp' ? 'bg-green-500' :
-                  rec.provider === 'azure' ? 'bg-blue-500' : 'bg-orange-500'
-                }`}></div>
-                <span className="text-xs font-medium text-slate-600 uppercase">{rec.provider}</span>
-              </div>
-            </div>
+      {error && (
+        <div className="mb-6 p-4 rounded-lg border border-orange-300 bg-orange-50 text-sm text-orange-800">
+          <div className="font-medium mb-1">Issue fetching live AI recommendations</div>
+          <div>{error}</div>
+          <div className="mt-2 text-xs text-orange-700">Showing fallback data if available. Check backend service and API key.</div>
+        </div>
+      )}
 
-            <div className="space-y-3 mb-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-600">Confidence</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-16 bg-slate-200 rounded-full h-2">
-                    <div 
-                      className="bg-green-500 h-2 rounded-full" 
-                      style={{ width: `${rec.confidence}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm font-medium text-slate-900">{rec.confidence}%</span>
+      {loading && !recs.length ? (
+        <div className="h-24 flex items-center justify-center">
+          <div className="flex items-center space-x-2 text-slate-600 text-sm">
+            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <span>Contacting Gemini...</span>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {recs.map((rec) => (
+            <div key={rec.id} className="border border-slate-200 rounded-lg p-5 hover:shadow-md transition-shadow duration-200">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-slate-900 truncate pr-2" title={rec.title}>{rec.title}</h4>
+                <div className="flex items-center space-x-1">
+                  <div className={`w-2 h-2 rounded-full ${providerColor(rec.provider)}`}></div>
+                  <span className="text-xs font-medium text-slate-600 uppercase">{rec.provider}</span>
                 </div>
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-sm text-slate-600">Cost Savings</span>
-                <span className="text-sm font-bold text-green-600">${rec.costSavings}/mo</span>
+              <div className="space-y-3 mb-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-600">Confidence</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-16 bg-slate-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full"
+                        style={{ width: `${rec.confidence}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium text-slate-900">{rec.confidence}%</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Cost Savings</span>
+                  <span className="text-sm font-bold text-green-600">${rec.costSavings}/mo</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Performance</span>
+                  <span className={`text-sm font-medium ${rec.performanceGain >= 0 ? 'text-green-600' : 'text-orange-600'}`}>{rec.performanceGain >= 0 ? '+' : ''}{rec.performanceGain}%</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Migration Time</span>
+                  <span className="text-sm font-medium text-slate-900">{rec.migrationTime}</span>
+                </div>
+
+                {rec.estimatedDowntime && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-600">Downtime</span>
+                    <span className="text-sm font-medium text-slate-900">{rec.estimatedDowntime}</span>
+                  </div>
+                )}
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-sm text-slate-600">Performance</span>
-                <span className={`text-sm font-medium ${
-                  rec.performanceGain >= 0 ? 'text-green-600' : 'text-orange-600'
-                }`}>
-                  {rec.performanceGain >= 0 ? '+' : ''}{rec.performanceGain}%
-                </span>
-              </div>
+              <p className="text-xs text-slate-600 mb-4 line-clamp-3" title={rec.reasoning}>{rec.reasoning}</p>
 
-              <div className="flex justify-between">
-                <span className="text-sm text-slate-600">Migration Time</span>
-                <span className="text-sm font-medium text-slate-900">{rec.migrationTime}</span>
+              <div className="flex space-x-2">
+                <button className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                  Apply
+                </button>
+                <button className="flex-1 px-3 py-2 border border-slate-700 bg-slate-700 text-white text-sm rounded-lg hover:bg-slate-600 transition-colors duration-200">
+                  Details
+                </button>
               </div>
             </div>
-
-            <p className="text-xs text-slate-600 mb-4">{rec.reasoning}</p>
-
-            <div className="flex space-x-2">
-              <button className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                Apply
-              </button>
-              <button className="flex-1 px-3 py-2 border border-slate-700 bg-slate-700 text-white text-sm rounded-lg hover:bg-slate-600 transition-colors duration-200">
-                Details
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
