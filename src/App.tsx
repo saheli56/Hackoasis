@@ -285,13 +285,13 @@ function AnalyticsTab() {
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="1h">Last Hour</option>
-            <option value="24h">Last 24 Hours</option>
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-            <option value="90d">Last 90 Days</option>
+            <option className="bg-white text-slate-900" value="1h">Last Hour</option>
+            <option className="bg-white text-slate-900" value="24h">Last 24 Hours</option>
+            <option className="bg-white text-slate-900" value="7d">Last 7 Days</option>
+            <option className="bg-white text-slate-900" value="30d">Last 30 Days</option>
+            <option className="bg-white text-slate-900" value="90d">Last 90 Days</option>
           </select>
         </div>
       </div>
